@@ -1,5 +1,6 @@
 {
     "notebook.output.wordWrap": true,
     "chat.editor.wordWrap": "on",
-    "editor.wordWrap": "on"
+    "editor.wordWrap": "on",
+    "notebook.output.scrolling": true
 }
