@@ -1,0 +1,3 @@
+_type: "prompt"
+template: " What do you know about {country}?"
+input_variables: ["country"]
