@@ -1,41 +1,21 @@
 import streamlit as st
-from langchain.prompts import PromptTemplate
 
-st.title("hello world!")
+st.title("This is title")
 
-st.subheader("Welcome to Streamlit!!")
 
-st.markdown(
-    """
-    #### I love it!
-    """
-)
 
-st.write("hi")
+with st.sidebar:
+    st.title("Sidebar title")
+    st.text_input("What its you title?")
 
-st.write([1,2,3,4])
+tab_one, tab_two, tab_three = st.tabs(["A","B","C"])
 
-st.write(PromptTemplate)
 
-p = PromptTemplate.from_template("xxx")
+with tab_one:
+    st.write("A")
 
-st.write(p)
+with tab_two:
+    st.write("B")
 
-model = st.selectbox(
-    label="Choose you model",
-    options=("GPT-3","GPT-4"),
-    placeholder="Please select"
-    )
-
-if model == "GPT-3":
-    st.subheader("Cheap")
-else:
-    st.subheader("not Cheap")
-    name = st.text_input("What is your name?")
-    st.write(name)
-
-    value = st.slider(
-        "temperature", min_value=0.1, max_value=1.0,
-    )
-
-    st.subheader(value)
+with tab_three:
+    st.write("C")
