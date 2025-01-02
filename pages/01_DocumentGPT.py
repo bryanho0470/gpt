@@ -1,4 +1,5 @@
 from curses import qiflush
+from networkx import stochastic_block_model
 import streamlit as st
 from langchain.storage import LocalFileStore
 from langchain_text_splitters import CharacterTextSplitter
@@ -7,12 +8,17 @@ from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
 from langchain.vectorstores import FAISS, Chroma
 
 
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+    # st.session_state.messages = []
+
 
 st.set_page_config(
     page_title="DocumentGPT",
     page_icon="💬"
 )
 
+@st.cache_data(show_spinner="Embedding file...")
 def embed_file (file):
     file_content = file.read()
     file_path=f"./.cache/files/{file.name}"
@@ -35,6 +41,11 @@ def embed_file (file):
     retriever = vectorstore.as_retriever()
     return retriever
 
+def send_message(message, role, save=True):
+    with st.chat_message(role):
+        st.markdown(message)
+    if save:
+        st.session_state.messages.append({"message": message, "role": role})
 
 st.title("DocumentGPT")
 
@@ -50,5 +61,11 @@ file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","d
 
 if file:   
     retriever = embed_file(file)
-    answer = retriever.invoke("Supporter")
-    answer   
+
+    send_message("I'm ready!! ask me anything about your file", "ai")
+
+    message = st.chat_input("Ask anything!!")
+
+    if message:
+        send_message(message, "user", save=False)
+
