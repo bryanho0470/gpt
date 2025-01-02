@@ -8,27 +8,23 @@ st.set_page_config(
 
 st.title("DocumentGPT")
 
-if "messages" not in st.session_state:
-    # session_state is the dictionary
-    st.session_state["messages"] = []
 
-def send_message(message, role, save=True):
-    # we call send_message() UTILITY FUNCTION which defined by users.
-    with st.chat_message(role):
-        st.write(message)
-    if save:
-        st.session_state["messages"].append({"message":message, "role": role})
+st.markdown(
+    """
+    Welcome!
+    Use this chatbot to ask questions to an AI about your files!
+    """
+    )
 
-for message in st.session_state["messages"]:
-    send_message(message["message"], message["role"], save=False)
+file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
 
+if file:
+    st.write(file)
+    file_content = file.read()
+    file_path=f"./.cache/files/{file.name}"
+    st.write(file_content, file_path)
+    with open(file_path, "wb") as f:
+        f.write(file_content)
 
-message = st.chat_input("Send message to AI")
-
-#  if message mean there is something. but it doesnt work if you code "message !=""," but it is same with != None 
-if message != None: 
-    send_message(message, 'human')
-    time.sleep(2)
-    send_message(f"You said: {message}","ai")
 
     
