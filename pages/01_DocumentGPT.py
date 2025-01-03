@@ -1,3 +1,4 @@
+from onnx import save
 import streamlit as st
 from langchain.storage import LocalFileStore
 from langchain_text_splitters import CharacterTextSplitter
@@ -18,16 +19,19 @@ from langchain.callbacks.base import BaseCallbackHandler
 
 class ChatCallbackHandler(BaseCallbackHandler):
 
+    message = ""
+
+
     def on_llm_start(self, serialized, prompts, *, run_id, parent_run_id = None, tags = None, metadata = None, **kwargs,):
-        with st.sidebar:
-            st.write("AI is Started...")
+        self.message_box = st.empty()
     
     def on_llm_end(self, response, *, run_id, parent_run_id = None, **kwargs):
-        with st.sidebar:
-            st.write("AI is Ended...")
+        save_message(self.message, "ai")    
 
     def on_llm_new_token(self, token, *, chunk = None, run_id, parent_run_id = None, **kwargs):
-        print(token)
+        self.message += token
+        # same with self.message = f'{self.message}{token}'
+        self.message_box.markdown(self.message)
 
 llm = ChatOpenAI(
     temperature=0.1,
@@ -65,11 +69,14 @@ def embed_file (file):
     retriever = vectorstore.as_retriever()
     return retriever
 
+def save_message(message, role):
+    st.session_state.messages.append({"message": message, "role": role})
+
 def send_message(message, role, save=True):
     with st.chat_message(role):
-        st.markdown(message)
+        st.write(message)
     if save:
-        st.session_state.messages.append({"message": message, "role": role})
+        save_message(message, role)
 
 def paint_history ():
     for message in st.session_state.messages:
@@ -112,13 +119,16 @@ if file:
 
     if message:
         send_message(message, "human")
-        chain = {
+        chain = (
+            {
             "context": retriever | RunnableLambda(format_docs),
             "question": RunnablePassthrough(),
-        } | prompt | llm
+            } | prompt | llm
+        )
 
-        responses = chain.invoke(message)
-        send_message(responses.content, "ai")
+        with st.chat_message("ai"):
+            responses = chain.invoke(message)
+        # send_message(responses.content, "ai")
         
         # docs = retriever.invoke(message)
         # docs = "\n\n".join(document.page_content for document in docs)
