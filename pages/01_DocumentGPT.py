@@ -1,17 +1,27 @@
-from curses import qiflush
-from networkx import stochastic_block_model
 import streamlit as st
 from langchain.storage import LocalFileStore
 from langchain_text_splitters import CharacterTextSplitter
 from langchain.document_loaders import UnstructuredFileLoader
 from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
 from langchain.vectorstores import FAISS, Chroma
+from langchain.prompts import ChatPromptTemplate
+from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
+from langchain.chat_models import ChatOpenAI
 
 
-if "messages" not in st.session_state:
-    st.session_state["messages"] = []
-    # st.session_state.messages = []
+# if "messages" not in st.session_state:
+#     st.session_state["messages"] = []
+#     # st.session_state.messages = []
+# =========================================
+#  This code doesnt need anymore because initialized in the last line
+# =========================================
 
+
+llm = ChatOpenAI(
+    temperature=0.1,
+    streaming=True,
+    callbacks=[],
+    )
 
 st.set_page_config(
     page_title="DocumentGPT",
@@ -47,6 +57,24 @@ def send_message(message, role, save=True):
     if save:
         st.session_state.messages.append({"message": message, "role": role})
 
+def paint_history ():
+    for message in st.session_state.messages:
+    # for message in st.session_state["messages"]: is same with above
+        send_message(message["message"], message["role"], save=False)
+
+def format_docs(docs):
+    return "\n\n".join(document.page_content for document in docs)
+
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", """
+    Answer the question using ONLY the following context. If you don't know the nswer just say you dont know. Don't make anything up.
+
+    Context: {context}
+    """),
+    ("human", "{question}"),]
+)
+
 st.title("DocumentGPT")
 
 
@@ -57,15 +85,32 @@ st.markdown(
     """
     )
 
-file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
+with st.sidebar:
+    file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
 
 if file:   
     retriever = embed_file(file)
 
-    send_message("I'm ready!! ask me anything about your file", "ai")
+    send_message("I'm ready!! ask me anything about your file", "ai", save=False)
+    paint_history()
 
     message = st.chat_input("Ask anything!!")
 
     if message:
-        send_message(message, "user", save=False)
+        send_message(message, "human")
+        chain = {
+            "context": retriever | RunnableLambda(format_docs),
+            "question": RunnablePassthrough(),
+        } | prompt | llm
 
+        responses = chain.invoke(message)
+        send_message(responses.content, "ai")
+        
+        # docs = retriever.invoke(message)
+        # docs = "\n\n".join(document.page_content for document in docs)
+        # # 위의코드는 각 도큐먼트 (여기에서는 4개의 리트리버)중간에 줄바꿈을 두번 해서 하나로 합친다는 코드
+        # prompt = template.format_messages(context=docs, question=message)
+        # llm.predict_messages(prompt)
+else:
+    st.session_state["messages"] = []
+    # if there was no file upload, we need to reset the messages
