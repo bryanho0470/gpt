@@ -7,7 +7,7 @@ from langchain.vectorstores import FAISS, Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 from langchain.chat_models import ChatOpenAI
-
+from langchain.callbacks.base import BaseCallbackHandler
 
 # if "messages" not in st.session_state:
 #     st.session_state["messages"] = []
@@ -16,11 +16,25 @@ from langchain.chat_models import ChatOpenAI
 #  This code doesnt need anymore because initialized in the last line
 # =========================================
 
+class ChatCallbackHandler(BaseCallbackHandler):
+
+    def on_llm_start(self, serialized, prompts, *, run_id, parent_run_id = None, tags = None, metadata = None, **kwargs,):
+        with st.sidebar:
+            st.write("AI is Started...")
+    
+    def on_llm_end(self, response, *, run_id, parent_run_id = None, **kwargs):
+        with st.sidebar:
+            st.write("AI is Ended...")
+
+    def on_llm_new_token(self, token, *, chunk = None, run_id, parent_run_id = None, **kwargs):
+        print(token)
 
 llm = ChatOpenAI(
     temperature=0.1,
     streaming=True,
-    callbacks=[],
+    callbacks=[
+        ChatCallbackHandler()
+    ],
     )
 
 st.set_page_config(
