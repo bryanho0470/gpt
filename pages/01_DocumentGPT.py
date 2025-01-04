@@ -161,6 +161,7 @@ if file:
             }
             | RunnablePassthrough.assign(history=RunnableLambda(st.session_state["memory"].load_memory_variables) | itemgetter("history")        
             )
+            # RunnablePassthrough and RunnableLambda is important to implement the chain. Passthrought is just pass the value to next chain and Lambda is to run the function in the chain 
             | prompt
             | llm
         )
