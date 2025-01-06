@@ -1,13 +1,14 @@
+from ast import mod
 from operator import itemgetter
 import streamlit as st
 from langchain.storage import LocalFileStore
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.document_loaders.unstructured import UnstructuredFileLoader
-from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
+from langchain.embeddings import OllamaEmbeddings, CacheBackedEmbeddings
 from langchain.vectorstores.faiss import FAISS
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatOllama
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.memory import ConversationSummaryBufferMemory
 
@@ -35,7 +36,8 @@ class ChatCallbackHandler(BaseCallbackHandler):
         # same with self.message = f'{self.message}{token}'
         self.message_box.markdown(self.message)
 
-llm = ChatOpenAI(
+llm = ChatOllama(
+    model="mistral:latest",
     temperature=0.1,
     streaming=True,
     callbacks=[
@@ -43,7 +45,7 @@ llm = ChatOpenAI(
     ],
     )
 
-memory_llm = ChatOpenAI(
+memory_llm = ChatOllama(
     temperature=0.1,
 )
 
@@ -79,7 +81,9 @@ def embed_file (file):
     )
     loader = UnstructuredFileLoader(file_path)
     docs = loader.load_and_split(text_splitter=splitter)
-    embeddings = OpenAIEmbeddings()
+    embeddings = OllamaEmbeddings(
+        model = "mistral:latest",
+    )
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
         embeddings, cache_dir
     )
