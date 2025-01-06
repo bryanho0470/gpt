@@ -4,3 +4,5 @@ env/
 files/
 .streamlit/
 .vscode/
+gpt4all-falcon-newbpe-q4_0.bin
+.gitignore
