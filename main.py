@@ -15,8 +15,8 @@ st.markdown(
 
     Here are the apps i made
 
-    - [ ] [DocumentGPT](/DocumentGPT)
-    - [ ] [PrivateGPT](/PrivateGPT)
+    - [X] [DocumentGPT](/DocumentGPT)
+    - [X] [PrivateGPT](/PrivateGPT)
     - [ ] [QuizGPT](/QuizGPT)
     - [ ] [SiteGPT](/SiteGPT)
     - [ ] [MeetingGPT](/MeetingGPT)

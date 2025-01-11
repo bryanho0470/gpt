@@ -1,4 +1,3 @@
-from ast import mod
 from operator import itemgetter
 import streamlit as st
 from langchain.storage import LocalFileStore
@@ -134,7 +133,7 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{question}"),]
 )
 
-st.title("DocumentGPT")
+st.title("PrivateGPT")
 
 st.markdown(
     """
