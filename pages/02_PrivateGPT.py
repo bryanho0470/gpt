@@ -1,5 +1,5 @@
-from operator import itemgetter
 import streamlit as st
+from operator import itemgetter
 from langchain.storage import LocalFileStore
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.document_loaders.unstructured import UnstructuredFileLoader
@@ -35,32 +35,6 @@ class ChatCallbackHandler(BaseCallbackHandler):
         # same with self.message = f'{self.message}{token}'
         self.message_box.markdown(self.message)
 
-llm = ChatOllama(
-    model="mistral:latest",
-    temperature=0.1,
-    streaming=True,
-    callbacks=[
-        ChatCallbackHandler()
-    ],
-    )
-
-memory_llm = ChatOllama(
-    temperature=0.1,
-)
-
-if "memory" not in st.session_state:
-    st.session_state["memory"] = ConversationSummaryBufferMemory(
-        llm=memory_llm,
-        max_token_limit=100,
-        memory_key="history",
-        return_messages=True,
-    )
-
-st.set_page_config(
-    page_title="PrivateGPT",
-    page_icon="💬"
-)
-
 def format_docs(docs):
     """Format retrieved documents."""
     return "\n\n".join(document.page_content for document in docs)
@@ -81,7 +55,7 @@ def embed_file (file):
     loader = UnstructuredFileLoader(file_path)
     docs = loader.load_and_split(text_splitter=splitter)
     embeddings = OllamaEmbeddings(
-        model = "mistral:latest",
+        model = selected_model,
     )
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
         embeddings, cache_dir
@@ -121,6 +95,45 @@ def invoke_chain(message):
     save_memory(message, result.content)
 
 
+st.set_page_config(
+    page_title="QuizGPT",
+    page_icon="💬"
+)
+
+st.title("QuizGPT")
+
+st.markdown(
+    """
+    Welcome!
+    Use this chatbot to ask questions to an AI about your files!
+    """
+    )
+
+with st.sidebar:
+    file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
+    selected_model = st.selectbox("Select Model", ["phi4:latest","mistral:latest","llama2:latest","qwen:latest",])
+
+llm = ChatOllama(
+    model=selected_model,
+    temperature=0.1,
+    streaming=True,
+    callbacks=[
+        ChatCallbackHandler()
+    ],
+    )
+
+memory_llm = ChatOllama(
+    temperature=0.1,
+)
+
+if "memory" not in st.session_state:
+    st.session_state["memory"] = ConversationSummaryBufferMemory(
+        llm=memory_llm,
+        max_token_limit=100,
+        memory_key="history",
+        return_messages=True,
+    )
+
 prompt = ChatPromptTemplate.from_messages([
     ("system", """
     Answer the question using ONLY the following context. If you don't know the nswer just say you dont know. Don't make anything up.
@@ -133,22 +146,10 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{question}"),]
 )
 
-st.title("PrivateGPT")
-
-st.markdown(
-    """
-    Welcome!
-    Use this chatbot to ask questions to an AI about your files!
-    """
-    )
-
-with st.sidebar:
-    file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
-
 if file:   
     retriever = embed_file(file)
 
-    send_message("I'm ready!! ask me anything about your file", "ai", save=False)
+    send_message(f'{selected_model} ready!! ask me anything about your file', "ai", save=False)
     restore_memory()
     paint_history()
 

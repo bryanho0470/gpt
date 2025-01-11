@@ -1,52 +1,28 @@
+from pydoc import doc
 import streamlit as st
-from operator import itemgetter
-from langchain.storage import LocalFileStore
+from langchain.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.document_loaders.unstructured import UnstructuredFileLoader
-from langchain.embeddings import OllamaEmbeddings, CacheBackedEmbeddings
-from langchain.vectorstores.faiss import FAISS
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
-from langchain.chat_models import ChatOllama
-from langchain.callbacks.base import BaseCallbackHandler
-from langchain.memory import ConversationSummaryBufferMemory
+from langchain.retrievers import WikipediaRetriever
+from langchain.chat_models import ChatOpenAI
 
+st.set_page_config(
+    page_title="QuizGPT",
+    page_icon="❓"
+)
 
-# if "messages" not in st.session_state:
-#     st.session_state["messages"] = []
-#     # st.session_state.messages = []
-# =========================================
-#  This code doesnt need anymore because initialized in the last line
-# =========================================
+st.title("QuizGPT")
 
-class ChatCallbackHandler(BaseCallbackHandler):
-    def __init__(self):
-        self.message = ""
-        self.message_box = None
+llm = ChatOpenAI(
+    temperature=0.1,
+    model="gpt-3.5-turbo-0125"
+)
 
-    def on_llm_start(self, serialized, prompts, *args, **kwargs,):
-        self.message_box = st.empty()
-    
-    def on_llm_end(self, response, *args, **kwargs):
-        save_message(self.message, "ai")    
-
-    def on_llm_new_token(self, token, *args, **kwargs):
-        self.message += token
-        # same with self.message = f'{self.message}{token}'
-        self.message_box.markdown(self.message)
-
-def format_docs(docs):
-    """Format retrieved documents."""
-    return "\n\n".join(document.page_content for document in docs)
-
-@st.cache_data(show_spinner="Embedding file...")
-def embed_file (file):
+@st.cache_data(show_spinner="Loading files.....")
+def split_file(file):
     file_content = file.read()
-    file_path=f"./.cache/private_files/{file.name}"
+    file_path = f"./.cache/quiz_files/{file.name}"
     with open(file_path, "wb") as f:
         f.write(file_content)
-
-    cache_dir = LocalFileStore("./.cache/private_embeddings")
     splitter = CharacterTextSplitter.from_tiktoken_encoder(
         separator="\n",
         chunk_size=600,
@@ -54,135 +30,37 @@ def embed_file (file):
     )
     loader = UnstructuredFileLoader(file_path)
     docs = loader.load_and_split(text_splitter=splitter)
-    embeddings = OllamaEmbeddings(
-        model = selected_model,
-    )
-    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
-        embeddings, cache_dir
-    )
-    vectorstore = FAISS.from_documents(docs, cached_embeddings) # we need to find another vectorstore service for further implementation. Chroma and FAISS is free vectorstore
-    retriever = vectorstore.as_retriever()
-    return retriever
-
-def save_message(message, role):
-    """save the message to the session state"""
-    st.session_state.messages.append({"message": message, "role": role})
-
-def save_memory(input, output):
-    """Save the memory to the session state"""
-    st.session_state["history"].append({"input":input, "output" : output})
-
-def send_message(message, role, save=True):
-    """Send and Display messafges in the chat ingterface"""
-    with st.chat_message(role):
-        st.write(message)
-    if save:
-        save_message(message, role)
-       
-def paint_history ():
-    """Replay chat history"""
-    for message in st.session_state.messages:
-    # for message in st.session_state["messages"]: is same with above
-        send_message(message["message"], message["role"], save=False)
-
-def restore_memory ():
-    """Restore memory from the session state"""
-    for history in st.session_state["history"]:
-        st.session_state["memory"].save_context({"input":history["input"]}, {"output":history["output"]})
-
-def invoke_chain(message):
-    result = chain.invoke(message)
-    save_memory(message, result.content)
-
-
-st.set_page_config(
-    page_title="QuizGPT",
-    page_icon="💬"
-)
-
-st.title("QuizGPT")
-
-st.markdown(
-    """
-    Welcome!
-    Use this chatbot to ask questions to an AI about your files!
-    """
-    )
+    return docs
 
 with st.sidebar:
-    file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
-    selected_model = st.selectbox("Select Model", ["phi4:latest","mistral:latest","llama2:latest","qwen:latest",])
-
-llm = ChatOllama(
-    model=selected_model,
-    temperature=0.1,
-    streaming=True,
-    callbacks=[
-        ChatCallbackHandler()
-    ],
+    docs = None
+    choice = st.selectbox(
+        "Choose what you want to use",
+        ("File", "Wikipedia Article"),
     )
-
-memory_llm = ChatOllama(
-    temperature=0.1,
-)
-
-if "memory" not in st.session_state:
-    st.session_state["memory"] = ConversationSummaryBufferMemory(
-        llm=memory_llm,
-        max_token_limit=100,
-        memory_key="history",
-        return_messages=True,
-    )
-
-prompt = ChatPromptTemplate.from_messages([
-    ("system", """
-    Answer the question using ONLY the following context. If you don't know the nswer just say you dont know. Don't make anything up.
-
-    Context: {context}
-     
-    And you will get about summarized context of previouse chat history below. If It is empty, you don't need to care about chat history yet.
-    Chat History: {history}
-    """),
-    ("human", "{question}"),]
-)
-
-if file:   
-    retriever = embed_file(file)
-
-    send_message(f'{selected_model} ready!! ask me anything about your file', "ai", save=False)
-    restore_memory()
-    paint_history()
-
-    message = st.chat_input("Ask anything!!")
-
-    if message:
-
-        send_message(message, "human")
-      
-        chain = ({
-            "context": retriever | RunnableLambda(format_docs),
-            "question": RunnablePassthrough(),
-            }
-            | RunnablePassthrough.assign(history=RunnableLambda(st.session_state["memory"].load_memory_variables) | itemgetter("history")        
-            )
-            # RunnablePassthrough and RunnableLambda is important to implement the chain. Passthrought is just pass the value to next chain and Lambda is to run the function in the chain 
-            | prompt
-            | llm
+    if choice =="File":
+        file = st.file_uploader(
+            "Upload a .docx, .txt, .pdf file",
+            type=["docx", "txt", "pdf"],
         )
+        if file:
+            docs = split_file(file)
+    else:
+        topic = st.text_input("Search Wikipedia for a topic")
+        if topic:
+            retriever = WikipediaRetriever(top_k_results=5)
+            with st.status("Searching Wikipedia..."):
+                docs = retriever.get_relevant_documents(topic)
 
-        with st.chat_message("ai"):
-            try:
-                invoke_chain(message)
-            except Exception as e:
-                st.write(e)
-        # send_message(responses.content, "ai")
-        
-        # docs = retriever.invoke(message)
-        # docs = "\n\n".join(document.page_content for document in docs)
-        # # 위의코드는 각 도큐먼트 (여기에서는 4개의 리트리버)중간에 줄바꿈을 두번 해서 하나로 합친다는 코드
-        # prompt = template.format_messages(context=docs, question=message)
-        # llm.predict_messages(prompt)
+if not docs:
+    st.markdown(
+        """
+        Welcome to QuizGPT! This app allows you to generate multiple-choice questions from a text document or a Wikipedia article.
+        """
+    )
+
 else:
-    st.session_state["messages"] = []
-    st.session_state["history"] = []
-    # if there was no file upload, we need to reset the messages
+    st.write(docs)
+    st.write("Done!")
+
+            
