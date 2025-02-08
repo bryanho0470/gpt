@@ -229,6 +229,7 @@ with st.sidebar:
         )
         if file:
             docs = split_file(file)
+            topic = file.name
     else:
         topic = st.text_input("Search Wikipedia for a topic")
         if topic:
@@ -242,13 +243,8 @@ if not docs:
     )
 
 else:
-
-
-    start = st.button("Generate your Quiz")
-
-    if start:
-        response = run_quiz_chain(docs, topic if topic else file.name)
-        st.write(response)
+    response = run_quiz_chain(docs, topic)
+    st.write(response)
 
  
             
