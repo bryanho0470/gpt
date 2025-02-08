@@ -3,11 +3,11 @@ import json
 from langchain.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.retrievers import WikipediaRetriever
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatOpenAI, ChatOllama
 from langchain.prompts import ChatPromptTemplate
 from langchain.callbacks import StreamingStdOutCallbackHandler
 from langchain.schema import BaseOutputParser
-
+        
 class JsonOutputParser(BaseOutputParser):
     def parse(self, text):
         text = text.replace("```","").replace("json","")
@@ -22,14 +22,27 @@ st.set_page_config(
 
 st.title("QuizGPT")
 
-llm = ChatOpenAI(
+with st.sidebar:
+    file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
+    selected_model = st.selectbox("Select Model", ["phi4:latest","mistral:latest","llama2:latest","qwen:latest",])
+
+llm = ChatOllama(
+    model=selected_model,
     temperature=0.1,
-    model="gpt-3.5-turbo-0125",
     streaming=True,
     callbacks=[
         StreamingStdOutCallbackHandler()
     ],
-)
+    )
+
+# llm = ChatOpenAI(
+#     temperature=0.1,
+#     model="gpt-3.5-turbo-0125",
+#     streaming=True,
+#     callbacks=[
+#         StreamingStdOutCallbackHandler()
+#     ],
+# )
 
 def format_docs(docs):
     """Format retrieved documents."""
@@ -245,6 +258,17 @@ if not docs:
 else:
     response = run_quiz_chain(docs, topic)
     st.write(response)
+    with st.form("question_form"):
+        for question in response["questions"]:
+            st.write(question["question"])
+            value = st.radio("Select your answer.", [answer["answer"] for answer in question["answers"]], index=None)
+            final_answer = {"answer" : value, "correct" : True}
+            if final_answer in question["answers"]:
+                st.success("Correct!!")
+            elif value is not None:
+                st.error("Wrong..")
+
+        button = st.form_submit_button()
 
  
             
