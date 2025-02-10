@@ -46,6 +46,7 @@ choose_prompt = ChatPromptTemplate.from_messages(
             Using the answers that have the highest score (more helpful) and favor the most recent ones.
 
             Cite sources. Return the score as it is.
+            And you need to conversation like as a owner the site.
 
             Answer: {answers}
             """,
@@ -75,7 +76,7 @@ def get_answers(inputs):
                 "question": question, "context": doc.page_content
             }).content,
             "source": doc.metadata["source"],
-            "date": doc.metadata['lastmod'],
+            
             } for doc in docs
         ],
     }
@@ -84,7 +85,7 @@ def choose_answer(inputs):
     answers = inputs["answers"]
     question = inputs["question"]
     choose_chain = choose_prompt | llm
-    condensed = "\n\n".join(f"{answer['answer']}\nSource:{answer['source']}\nDate:{answer['date']}\n" for answer in answers)
+    condensed = "\n\n".join(f"{answer['answer']}\nSource:{answer['source']}\n" for answer in answers)
     return choose_chain.invoke({
         "question":question,
         "answers": condensed,
@@ -113,7 +114,7 @@ def load_website(url):
         chunk_size=1000, chunk_overlap=200,
     )
     loader = SitemapLoader(
-        url, filter_urls=[r"^(.*\/archives\/).*"],
+        url,
         parsing_function=parse_page,
     )
     loader.requests_per_second = 5
@@ -153,7 +154,7 @@ if url:
             st.error("Please write down Sitemap URL")
     else:
         retriever = load_website(url)
-        query = st.text_input("You can ask anything about Sky Drive")
+        query = st.text_input("You can ask anything about this WEBSITE")
         if query:
             chain = {"doc": retriever, "question" : RunnablePassthrough()} | RunnableLambda(get_answers) | RunnableLambda(choose_answer)
 
