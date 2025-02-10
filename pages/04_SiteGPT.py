@@ -1,6 +1,54 @@
 import streamlit as st
-from langchain.document_loaders import SitemapLoader, text
+from langchain.chat_models import ChatOpenAI
+from langchain.document_loaders import SitemapLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores.faiss import FAISS
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
+from langchain.prompts import ChatPromptTemplate
+
+llm = ChatOpenAI(
+    temperature=0.1
+)
+
+answer_prompt = ChatPromptTemplate.from_template(
+    """
+    Using ONLY the following context answer the user's question. IF you can't just say you don't know, don't make naything up.
+
+    Then, give a score to the answer between and 5. 0 being not helpful to the user and 5 being helpful to the user.
+
+    Examples:
+
+    Question: How far away is the moon?
+    Answer: The moon is 384,400km away.
+    Score: 5
+
+    Question: How far away is the sun?
+    Answer: I don't know
+    Score: 0
+
+    your turn!
+
+    Context: {context}
+    Question: {question}
+    """
+)
+
+
+
+def get_answers(inputs):
+    docs = inputs['doc']
+    question = inputs['question']
+    answer_chain = answer_prompt | llm
+    answers = []
+    for doc in docs:
+        result = answer_chain.invoke({
+            "question": question,
+            "context" : doc.page_content
+        })
+        answers.append(result.content)
+    st.write(answers)
+
 
 
 def parse_page(soup):
@@ -8,6 +56,7 @@ def parse_page(soup):
     footer = soup.find("footer")
     if header:
         header.decompose()
+        # decompose is to delet include header tag in teh soup
     if footer:
         footer.decompose()
     return (
@@ -27,7 +76,8 @@ def load_website(url):
     docs = loader.load_and_split(
         text_splitter=splitter
     )
-    return docs
+    vector_store = FAISS.from_documents(docs, OpenAIEmbeddings())
+    return vector_store.as_retriever()
 
 st.set_page_config(
     page_title="SiteGPT",
@@ -58,5 +108,7 @@ if url:
         with st.sidebar:
             st.error("Please write down Sitemap URL")
     else:
-        docs = load_website(url)
-        st.write(docs)
+        retriever = load_website(url)
+        chain = {"doc": retriever, "question" : RunnablePassthrough()} | RunnableLambda(get_answers)
+
+        chain.invoke("自治体コラボのうち、もっとも大きな自治体との連携事例はどれ？")
