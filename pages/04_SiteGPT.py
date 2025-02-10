@@ -17,6 +17,8 @@ answer_prompt = ChatPromptTemplate.from_template(
 
     Then, give a score to the answer between and 5. 0 being not helpful to the user and 5 being helpful to the user.
 
+    You don't need to show the score in final answer.
+
     Examples:
 
     Question: How far away is the moon?
@@ -34,20 +36,62 @@ answer_prompt = ChatPromptTemplate.from_template(
     """
 )
 
+choose_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """
+            Use ONLY the following pre-existing answers to answer the user's question.
 
+            Using the answers that have the highest score (more helpful) and favor the most recent ones.
+
+            Cite sources. Return the score as it is.
+
+            Answer: {answers}
+            """,
+        ),
+        (
+            "human", "{question}"
+        ),
+    ]
+)
 
 def get_answers(inputs):
     docs = inputs['doc']
     question = inputs['question']
     answer_chain = answer_prompt | llm
-    answers = []
-    for doc in docs:
-        result = answer_chain.invoke({
-            "question": question,
-            "context" : doc.page_content
-        })
-        answers.append(result.content)
-    st.write(answers)
+    # answers = []
+    # for doc in docs:
+    #     result = answer_chain.invoke({
+    #         "question": question,
+    #         "context" : doc.page_content
+    #     })
+    #     answers.append(result.content)
+    return {
+        "question" : question,
+        "answers" :[
+            {
+            "answer": answer_chain.invoke({
+                "question": question, "context": doc.page_content
+            }).content,
+            "source": doc.metadata["source"],
+            "date": doc.metadata['lastmod'],
+            } for doc in docs
+        ],
+    }
+
+def choose_answer(inputs):
+    answers = inputs["answers"]
+    question = inputs["question"]
+    choose_chain = choose_prompt | llm
+    condensed = "\n\n".join(f"{answer['answer']}\nSource:{answer['source']}\nDate:{answer['date']}\n" for answer in answers)
+    return choose_chain.invoke({
+        "question":question,
+        "answers": condensed,
+    })
+
+
+
 
 
 
@@ -109,6 +153,10 @@ if url:
             st.error("Please write down Sitemap URL")
     else:
         retriever = load_website(url)
-        chain = {"doc": retriever, "question" : RunnablePassthrough()} | RunnableLambda(get_answers)
+        query = st.text_input("You can ask anything about Sky Drive")
+        if query:
+            chain = {"doc": retriever, "question" : RunnablePassthrough()} | RunnableLambda(get_answers) | RunnableLambda(choose_answer)
 
-        chain.invoke("自治体コラボのうち、もっとも大きな自治体との連携事例はどれ？")
+            result = chain.invoke(query)
+
+            st.write(result.content)
