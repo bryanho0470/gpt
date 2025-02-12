@@ -4,15 +4,22 @@ from pydub import AudioSegment
 import openai
 import math
 import glob
+import os
+
+has_transcript = os.path.exists("./files/transcripts/final_transcript.txt")
 
 @st.cache_data()
 def extract_audio_from_video(video_path):
+    if has_transcript:
+        return
     audio_path = video_path.replace("mp4", "mp3").replace("mkv","mp3").replace("avi","mp3").replace("mov","mp3")
     command = ["ffmpeg", "-y", "-i", video_path, "-vn", audio_path,]
     return subprocess.run(command)
 
 @st.cache_data()
 def cut_audio_to_chunks(video_path,chunk_size, chunks_folder):
+    if has_transcript:
+        return
     audio_path = video_path.replace("mp4", "mp3").replace("mkv","mp3").replace("avi","mp3").replace("mov","mp3")
     track = AudioSegment.from_mp3(audio_path)
     chunk_len = chunk_size * 60 * 1000
@@ -26,6 +33,8 @@ def cut_audio_to_chunks(video_path,chunk_size, chunks_folder):
 
 @st.cache_data()
 def transcribe_chunks(chunk_folder, destination):
+    if has_transcript:
+        return
     files = glob.glob(f"{chunk_folder}/*.mp3")
     files.sort()
     for file in files:
@@ -40,6 +49,8 @@ st.set_page_config(
     page_title="MeetingGPT",
     page_icon="📅"
 )
+
+st.markdown(f"already has transcript? =  {has_transcript}")
 
 st.title("MeetingGPT")
 st.markdown("""
