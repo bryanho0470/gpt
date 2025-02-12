@@ -8,8 +8,11 @@ import os #for control files
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.document_loaders import TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
 from langchain.schema import StrOutputParser
+from langchain.vectorstores.faiss import FAISS
+from langchain.storage import LocalFileStore
+from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
 
 llm = ChatOpenAI(
     temperature=0.1,
@@ -17,6 +20,21 @@ llm = ChatOpenAI(
 
 
 has_transcript = os.path.exists("./files/transcripts/final_transcript.txt")
+
+splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(chunk_size=800, chunk_overlap=100,)
+
+@st.cache_data()
+def embed_file (file_path):
+    cache_dir = LocalFileStore("./.cache/embeddings")
+    loader = TextLoader(file_path)
+    docs = loader.load_and_split(text_splitter=splitter)
+    embeddings = OpenAIEmbeddings()
+    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
+        embeddings, cache_dir
+    )
+    vectorstore = FAISS.from_documents(docs, cached_embeddings) # we need to find another vectorstore service for further implementation. Chroma and FAISS is free vectorstore
+    retriever = vectorstore.as_retriever()
+    return retriever
 
 @st.cache_data()
 def extract_audio_from_video(video_path):
@@ -100,7 +118,6 @@ with summary_tab:
     start = st.button("Generate Summary")
     if start:
         loader = TextLoader(destination)
-        splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(chunk_size=800, chunk_overlap=100,)
         docs = loader.load_and_split(text_splitter=splitter)
         st.write(docs)
 
@@ -134,12 +151,20 @@ with summary_tab:
 
         with st.status("Summarizing......") as status:
             for i, doc in enumerate(docs[1:]):
-                status.update(label=f"Processing Document {i}/{len(docs)-1}")
+                status.update(label=f"Processing Document {i+1}/{len(docs)-1}")
                 summary = refine_chain.invoke({
                     "exsiting_summary": summary,
                     "context": doc.page_content
                 })
+                st.write(summary)
         st.write(summary)
+
+with qna_tab:
+
+    retriever = embed_file(destination)
+    docs = retriever.invoke("Do They talk about country that it is related to Silk road?")
+    st.write(docs)
+
 
 
 
