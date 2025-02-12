@@ -81,6 +81,11 @@ if video:
         status.update(label="All done! Thank you for your patients")
         st.write("🎉")
 
+transcript_tab, sumarry_tab, qna_tab = st.tabs(["Transcript","Summary","Q&A",])
+
+with transcript_tab:
+    with open(destination) as file:
+        st.write(file.read())
 
 
 
