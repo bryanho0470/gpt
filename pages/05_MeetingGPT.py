@@ -5,13 +5,13 @@ import openai
 import math
 import glob
 
-@st.cache_data(show_spinner="Extract Audio segment...")
+@st.cache_data()
 def extract_audio_from_video(video_path):
     audio_path = video_path.replace("mp4", "mp3").replace("mkv","mp3").replace("avi","mp3").replace("mov","mp3")
     command = ["ffmpeg", "-y", "-i", video_path, "-vn", audio_path,]
     return subprocess.run(command)
 
-@st.cache_data(show_spinner="Cut Audio to Chunk for Whisper...")
+@st.cache_data()
 def cut_audio_to_chunks(video_path,chunk_size, chunks_folder):
     audio_path = video_path.replace("mp4", "mp3").replace("mkv","mp3").replace("avi","mp3").replace("mov","mp3")
     track = AudioSegment.from_mp3(audio_path)
@@ -24,7 +24,7 @@ def cut_audio_to_chunks(video_path,chunk_size, chunks_folder):
         chunk = track[start_time:end_time]
         chunk.export(f"{chunks_folder}/chunk_{i}.mp3", format="mp3")
 
-@st.cache_data(show_spinner="Create Whole Transcript...")
+@st.cache_data()
 def transcribe_chunks(chunk_folder, destination):
     files = glob.glob(f"{chunk_folder}/*.mp3")
     files.sort()
