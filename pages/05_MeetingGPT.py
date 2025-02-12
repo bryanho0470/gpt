@@ -7,7 +7,7 @@ import glob
 
 def extract_audio_from_video(video_path):
     audio_path = video_path.replace("mp4", "mp3").replace("mkv","mp3").replace("avi","mp3").replace("mov","mp3")
-    command = ["ffmpeg", "-i", video_path, "-vn", audio_path,]
+    command = ["ffmpeg", "-y", "-i", video_path, "-vn", audio_path,]
 
     return subprocess.run(command)
 
@@ -40,7 +40,7 @@ st.set_page_config(
 
 with st.sidebar:
     video = st.file_uploader("Video", type=["mp4", "avi","mkv","mov",])
-    selected_chunk_size = st.selectbox("Select Chunk Size (min)",[3,5,10], index=1)
+    selected_chunk_len = st.selectbox("Select Chunk Size (min)",[3,5,10], index=1)
     chunks_folder = "./files/chunks"
     destination = "./files/transcripts/final_transcript.txt"
     if video:
@@ -49,11 +49,16 @@ with st.sidebar:
         with open(video_path, "wb") as f:
             f.write(video_content)
         extract_audio_from_video(video_path)
-        cut_audio_to_chunks(video_path, selected_chunk_size, chunks_folder)
+        cut_audio_to_chunks(video_path, selected_chunk_len, chunks_folder)
         transcribe_chunks(chunks_folder, destination)
 
 
 
 
 st.title("MeetingGPT")
+st.markdown("""
+    Welcome to Meeting GPT. Please upload your recoreded meeting Video.
+    Then, we will provide a transcript and summarized minutes.
+
+""")
 
