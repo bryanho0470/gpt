@@ -1,3 +1,4 @@
+from cProfile import label
 import streamlit as st
 import subprocess
 from pydub import AudioSegment
@@ -66,18 +67,18 @@ with st.sidebar:
     destination = "./files/transcripts/final_transcript.txt"
 
 if video:
-    with st.status("Uplading Video now..."):
+    with st.status("Uplading Video now...") as status:
         video_content = video.read()
         video_path = f"./.cache/mp3/{video.name}"
         with open(video_path, "wb") as f:
             f.write(video_content)
-    with st.status("Extract audio segment now..."):
+        status.update(label="Extract audio segment now...")
         extract_audio_from_video(video_path)
-    with st.status("Cutting Audio for preparing using whisper"):
+        status.update(label="Cutting Audio for preparing using whisper")
         cut_audio_to_chunks(video_path, selected_chunk_len, chunks_folder)
-    with st.status("Making whole Transcript..Please wait.."):
+        status.update(label="Making whole Transcript..Please wait..")
         transcribe_chunks(chunks_folder, destination)
-    with st.status("All done! Thank you for your patients"):
+        status.update(label="All done! Thank you for your patients")
         st.write("🎉")
 
 
