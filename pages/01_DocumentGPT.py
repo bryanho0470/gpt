@@ -149,7 +149,7 @@ if file:
     restore_memory()
     paint_history()
 
-    message = st.chat_input("Ask anything!!")
+    message = st.chat_input("Ask anything!")
 
     if message:
 
