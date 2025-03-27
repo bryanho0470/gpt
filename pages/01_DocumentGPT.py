@@ -3,7 +3,7 @@ import streamlit as st
 
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.document_loaders.unstructured import UnstructuredFileLoader
-from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
+from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores.faiss import FAISS
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
