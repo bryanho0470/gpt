@@ -41,6 +41,32 @@ st.set_page_config(
     page_icon="💬"
 )
 
+with st.sidebar:
+    st.subheader("API setting")
+    openai_api_key = st.text_input("Enter your OpenAI API KEY!")
+
+memory_llm = ChatOpenAI(
+    temperature=0.1,
+    openai_api_key=openai_api_key
+)
+llm = ChatOpenAI(
+    temperature=0.1,
+    openai_api_key=openai_api_key,
+    streaming=True,
+    callbacks=[
+        ChatCallbackHandler()
+    ],
+    )
+
+if "memory" not in st.session_state:
+    st.session_state["memory"] = ConversationSummaryBufferMemory(
+        llm=memory_llm,
+        max_token_limit=100,
+        memory_key="history",
+        return_messages=True,
+    )
+
+
 def format_docs(docs):
     """Format retrieved documents."""
     return "\n\n".join(document.page_content for document in docs)
@@ -119,31 +145,8 @@ st.markdown(
 
 with st.sidebar:
     file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
-    st.subheader("API setting")
-    openai_api_key = st.text_input("Enter your OpenAI API KEY!")
-
-memory_llm = ChatOpenAI(
-    temperature=0.1,
-    openai_api_key=openai_api_key
-)
-llm = ChatOpenAI(
-    temperature=0.1,
-    openai_api_key=openai_api_key,
-    streaming=True,
-    callbacks=[
-        ChatCallbackHandler()
-    ],
-    )
 
 
-
-if "memory" not in st.session_state:
-    st.session_state["memory"] = ConversationSummaryBufferMemory(
-        llm=memory_llm,
-        max_token_limit=100,
-        memory_key="history",
-        return_messages=True,
-    )
 
 
 if file:   
