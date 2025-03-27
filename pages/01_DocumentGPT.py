@@ -35,25 +35,6 @@ class ChatCallbackHandler(BaseCallbackHandler):
         # same with self.message = f'{self.message}{token}'
         self.message_box.markdown(self.message)
 
-llm = ChatOpenAI(
-    temperature=0.1,
-    streaming=True,
-    callbacks=[
-        ChatCallbackHandler()
-    ],
-    )
-
-memory_llm = ChatOpenAI(
-    temperature=0.1,
-)
-
-if "memory" not in st.session_state:
-    st.session_state["memory"] = ConversationSummaryBufferMemory(
-        llm=memory_llm,
-        max_token_limit=100,
-        memory_key="history",
-        return_messages=True,
-    )
 
 st.set_page_config(
     page_title="DocumentGPT",
@@ -71,7 +52,6 @@ def embed_file (file):
     with open(file_path, "wb") as f:
         f.write(file_content)
 
-    cache_dir = LocalFileStore("./.cache/embeddings")
     splitter = CharacterTextSplitter.from_tiktoken_encoder(
         separator="\n",
         chunk_size=600,
@@ -139,6 +119,32 @@ st.markdown(
 
 with st.sidebar:
     file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
+    st.subheader("API setting")
+    openai_api_key = st.text_input("Enter your OpenAI API KEY!")
+
+memory_llm = ChatOpenAI(
+    temperature=0.1,
+    openai_api_key=openai_api_key
+)
+llm = ChatOpenAI(
+    temperature=0.1,
+    openai_api_key=openai_api_key,
+    streaming=True,
+    callbacks=[
+        ChatCallbackHandler()
+    ],
+    )
+
+
+
+if "memory" not in st.session_state:
+    st.session_state["memory"] = ConversationSummaryBufferMemory(
+        llm=memory_llm,
+        max_token_limit=100,
+        memory_key="history",
+        return_messages=True,
+    )
+
 
 if file:   
     retriever = embed_file(file)
