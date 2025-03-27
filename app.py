@@ -44,6 +44,9 @@ st.set_page_config(
 with st.sidebar:
     st.subheader("API setting")
     openai_api_key = st.text_input("Enter your OpenAI API KEY!")
+    if not openai_api_key:
+        st.warning("Please enter your OpenAI API key to continue.")
+        st.stop()
 
 memory_llm = ChatOpenAI(
     temperature=0.1,
