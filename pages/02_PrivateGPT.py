@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 from operator import itemgetter
 from langchain.storage import LocalFileStore
 from langchain.text_splitter import CharacterTextSplitter
@@ -42,7 +43,10 @@ def format_docs(docs):
 @st.cache_data(show_spinner="Embedding file...")
 def embed_file (file):
     file_content = file.read()
-    file_path=f"./.cache/private_files/{file.name}"
+    # file_path=f"./.cache/private_files/{file.name}"
+    tmp_dir = "cache/private_files"
+    os.makedirs(tmp_dir, exist_ok=True)
+    file_path = os.path.join(tmp_dir, file.name)
     with open(file_path, "wb") as f:
         f.write(file_content)
 
@@ -110,6 +114,11 @@ st.markdown(
     )
 
 with st.sidebar:
+    st.subheader("API setting")
+    openai_api_key = st.text_input("Enter your OpenAI API KEY!")
+    if not openai_api_key:
+        st.warning("Please enter your OpenAI API key to continue.")
+        st.stop()
     file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
     selected_model = st.selectbox("Select Model", ["phi4:latest","mistral:latest","llama2:latest","qwen:latest",])
 
