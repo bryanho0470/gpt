@@ -142,13 +142,23 @@ with transcript_tab:
         with open(destination) as file:
             st.write(file.read())
     else:
-        st.warning("Transcript not found. Please upload a video file first.")
+        st.warning
 
 with summary_tab:
     start = st.button("Generate Summary")
     if start:
-        loader = TextLoader(destination)
-        docs = loader.load_and_split(text_splitter=splitter)
+        if os.path.exists(destination) and os.path.getsize(destination) > 0:
+            try:
+                loader = TextLoader(destination)
+                docs = loader.load_and_split(text_splitter=splitter)
+            except Exception as e:
+                st.error(f"Error loading file: {e}")
+                st.stop()
+        else:
+            st.warning("Transcript file is empty or does not exist.")
+            st.stop()
+        
+        
         first_summary_prompt = ChatPromptTemplate.from_template(
         """
         Write a concise summary of the following:
