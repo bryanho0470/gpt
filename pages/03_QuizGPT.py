@@ -44,7 +44,7 @@ st.title("QuizGPT")
 #     ],
 #     )
 
-with st.markdown:
+with st.sidebar:
     st.subheader("API setting")
     openai_api_key = st.text_input("Enter your OpenAI API KEY!")
     if not openai_api_key:
