@@ -51,7 +51,7 @@ with st.sidebar:
         st.session_state.api_confirmed = False
 
     if not st.session_state["api_confirmed"]:
-        openai_api_key = st.text_input("Enter your OpenAI API KEY!", type="password", key="api_key_input")
+        openai_api_key = st.text_input("Enter your OpenAI API KEY!", type="password")
         confirm_button = st.button("Confirm API Key")
 
         if confirm_button:
