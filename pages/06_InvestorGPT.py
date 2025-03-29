@@ -8,7 +8,12 @@ from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
 from langchain.utilities import DuckDuckGoSearchAPIWrapper
 from langchain.schema import SystemMessage
-from sympy import true
+
+
+st.set_page_config(
+    page_title="InvestorGPT",
+    page_icon="💬"
+)
 
 with st.sidebar:
     st.subheader("API setting")
@@ -127,10 +132,6 @@ agent = initialize_agent(
     }
 )
 
-st.set_page_config(
-    page_title="InvestorGPT",
-    page_icon="💬"
-)
 
 st.markdown("""
     # Investor GPT

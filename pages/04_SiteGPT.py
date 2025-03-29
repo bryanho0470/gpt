@@ -7,6 +7,11 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
 from langchain.prompts import ChatPromptTemplate
 
+st.set_page_config(
+    page_title="SiteGPT",
+    page_icon="📺"
+)
+
 with st.sidebar:
     st.subheader("API setting")
 
@@ -151,10 +156,7 @@ def load_website(url):
     vector_store = FAISS.from_documents(docs, OpenAIEmbeddings())
     return vector_store.as_retriever()
 
-st.set_page_config(
-    page_title="SiteGPT",
-    page_icon="📺"
-)
+
 
 st.title("SiteGPT")
 

@@ -13,6 +13,11 @@ from langchain.schema import StrOutputParser
 from langchain.vectorstores.faiss import FAISS
 from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
 
+st.set_page_config(
+    page_title="MeetingGPT",
+    page_icon="📅"
+)
+
 with st.sidebar:
     st.subheader("API setting")
 
@@ -94,10 +99,7 @@ def transcribe_chunks(chunk_folder, destination):
         with open(destination, "a") as text_file:
             text_file.write(transcript["text"])
 
-st.set_page_config(
-    page_title="MeetingGPT",
-    page_icon="📅"
-)
+
 
 st.markdown(f"already has transcript? =  {has_transcript}")
 
