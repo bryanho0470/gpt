@@ -13,7 +13,33 @@ from langchain.schema import StrOutputParser
 from langchain.vectorstores.faiss import FAISS
 from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
 
+with st.sidebar:
+    st.subheader("API setting")
+
+    if 'api_confirmed' not in st.session_state:
+        st.session_state.api_confirmed = False
+
+    if not st.session_state["api_confirmed"]:
+        openai_api_key = st.text_input("Enter your OpenAI API KEY!", type="password")
+        confirm_button = st.button("Confirm API Key")
+
+        if confirm_button:
+            if openai_api_key and openai_api_key.startswith("sk-"):
+                st.session_state["api_key"] = openai_api_key
+                st.session_state["api_confirmed"] = True
+                st.success("API key confirmed!")
+            else:
+                st.error("Invalid API key.")
+                st.stop()
+        else:
+            st.stop()
+    else:
+        openai_api_key = st.session_state["api_key"]
+        st.success("API key confirmed!")
+        st.balloons()
+
 llm = ChatOpenAI(
+    openai_api_key=openai_api_key,
     temperature=0.1,
 )
 
