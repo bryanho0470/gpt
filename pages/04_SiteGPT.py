@@ -34,6 +34,7 @@ with st.sidebar:
 
 
 llm = ChatOpenAI(
+    openai_api_key=openai_api_key,
     temperature=0.1
 )
 
