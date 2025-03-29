@@ -1,5 +1,6 @@
 import openai
 import streamlit as st
+import os
 import re
 import json
 from langchain.document_loaders import UnstructuredFileLoader
@@ -31,8 +32,8 @@ st.set_page_config(
 
 st.title("QuizGPT")
 
-with st.sidebar:
-    selected_model = st.selectbox("Select Model", ["phi4:latest","mistral:latest","llama2:latest","qwen:latest",])
+# with st.sidebar:
+#     selected_model = st.selectbox("Select Model", ["phi4:latest","mistral:latest","llama2:latest","qwen:latest",])
 
 # llm = ChatOllama(
 #     model=selected_model,
@@ -223,7 +224,10 @@ formatting_chain = formatting_prompt | llm
 @st.cache_data(show_spinner="Loading files.....")
 def split_file(file):
     file_content = file.read()
-    file_path = f"./.cache/quiz_files/{file.name}"
+    # file_path = f"./.cache/quiz_files/{file.name}"
+    tmp_dir = "caches/quiz_files"
+    os.makedirs(tmp_dir, exist_ok=True)
+    file_path = os.path.join(tmp_dir, file.name)
     with open(file_path, "wb") as f:
         f.write(file_content)
     splitter = CharacterTextSplitter.from_tiktoken_encoder(
