@@ -96,11 +96,11 @@ def invoke_chain(message):
 
 
 st.set_page_config(
-    page_title="QuizGPT",
-    page_icon="💬"
+    page_title="Private models DocumentGPT",
+    page_icon="🕵️‍♀️",
 )
 
-st.title("QuizGPT")
+st.title("PrivateGPT Document Chatbot")
 
 st.markdown(
     """
