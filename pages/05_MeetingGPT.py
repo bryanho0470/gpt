@@ -113,8 +113,8 @@ st.markdown("""
 with st.sidebar:
     video = st.file_uploader("Video", type=["mp4", "avi","mkv","mov",])
     selected_chunk_len = st.selectbox("Select Chunk Size (min)",[3,5,10], index=1)
-    chunks_folder = "./files/chunks"
-    destination = "./files/transcripts/final_transcript.txt"
+    chunks_folder = "/tmp/chunks"
+    destination = "/tmp/transcripts/final_transcript.txt"
 
 if video:
     with st.status("Uplading Video now...") as status:
