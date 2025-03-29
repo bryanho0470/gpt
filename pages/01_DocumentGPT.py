@@ -1,4 +1,5 @@
 from operator import itemgetter
+import os
 import streamlit as st
 
 from langchain.text_splitter import CharacterTextSplitter
@@ -74,10 +75,13 @@ def format_docs(docs):
     """Format retrieved documents."""
     return "\n\n".join(document.page_content for document in docs)
 
-@st.cache_data(show_spinner="Embedding file...")
+@st.cache_resource(show_spinner="Embedding file...")
 def embed_file (file):
     file_content = file.read()
-    file_path=f"./.cache/files/{file.name}"
+    # file_path=f"./.cache/files/{file.name}"
+    tem_drt = "caches/quiz_files"
+    os.makedirs(tem_drt, exist_ok=True)
+    file_path = os.path.join(tem_drt, file.name)
     with open(file_path, "wb") as f:
         f.write(file_content)
 
