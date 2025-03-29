@@ -46,11 +46,28 @@ st.title("QuizGPT")
 
 with st.sidebar:
     st.subheader("API setting")
-    openai_api_key = st.text_input("Enter your OpenAI API KEY!", type="password")
-    if not openai_api_key:
-        st.warning("Please enter your OpenAI API key to continue.")
-        st.stop()
 
+    if 'api_confirmed' not in st.session_state:
+        st.session_state.api_confirmed = False
+
+    if not st.session_state["api_confirmed"]:
+        openai_api_key = st.text_input("Enter your OpenAI API KEY!", type="password", key="api_key_input")
+        confirm_button = st.button("Confirm API Key")
+
+        if confirm_button:
+            if openai_api_key and openai_api_key.startswith("sk-"):
+                st.session_state["api_key"] = openai_api_key
+                st.session_state["api_confirmed"] = True
+                st.success("API key confirmed!")
+            else:
+                st.error("Invalid API key.")
+                st.stop()
+        else:
+            st.stop()
+    else:
+        st.success("API key confirmed!")
+        st.balloons()
+        
 llm = ChatOpenAI(
     temperature=0.1,
     model="gpt-3.5-turbo-0125",
