@@ -297,7 +297,6 @@ if not docs:
 
 else:
     response = run_quiz_chain(docs, topic)
-    st.write(response)
     with st.form("question_form"):
         for question in response["questions"]:
             st.write(question["question"])
