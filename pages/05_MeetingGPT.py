@@ -47,9 +47,9 @@ with st.sidebar:
         selected_chunk_len = st.selectbox("Select Chunk Size (min)",[3,5,10], index=1)
         chunks_folder = "/tmp/chunks"
         destination = "/tmp/transcripts/final_transcript.txt"
-        has_transcript = os.path.exists(destination)
         os.makedirs(chunks_folder, exist_ok=True)
         os.makedirs(os.path.dirname(destination), exist_ok=True)
+        has_transcript = os.path.exists(destination)
 
 llm = ChatOpenAI(
     openai_api_key=openai_api_key,
@@ -138,8 +138,11 @@ if video:
 transcript_tab, summary_tab, qna_tab = st.tabs(["Transcript","Summary","Q&A",])
 
 with transcript_tab:
-    with open(destination) as file:
-        st.write(file.read())
+    if os.path.exists(destination):
+        with open(destination) as file:
+            st.write(file.read())
+    else:
+        st.warning("Transcript not found. Please upload a video file first.")
 
 with summary_tab:
     start = st.button("Generate Summary")
