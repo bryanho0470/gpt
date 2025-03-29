@@ -115,10 +115,28 @@ st.markdown(
 
 with st.sidebar:
     st.subheader("API setting")
-    openai_api_key = st.text_input("Enter your OpenAI API KEY!")
-    if not openai_api_key:
-        st.warning("Please enter your OpenAI API key to continue.")
-        st.stop()
+
+    if 'api_confirmed' not in st.session_state:
+        st.session_state.api_confirmed = False
+
+    if not st.session_state["api_confirmed"]:
+        openai_api_key = st.text_input("Enter your OpenAI API KEY!", type="password")
+        confirm_button = st.button("Confirm API Key")
+
+        if confirm_button:
+            if openai_api_key and openai_api_key.startswith("sk-"):
+                st.session_state["api_key"] = openai_api_key
+                st.session_state["api_confirmed"] = True
+                st.success("API key confirmed!")
+            else:
+                st.error("Invalid API key.")
+                st.stop()
+        else:
+            st.stop()
+    else:
+        openai_api_key = st.session_state["api_key"]
+        st.success("API key confirmed!")
+        st.balloons()
     file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
     selected_model = st.selectbox("Select Model", ["phi4:latest","mistral:latest","llama2:latest","qwen:latest",])
 
