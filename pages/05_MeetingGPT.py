@@ -43,15 +43,23 @@ with st.sidebar:
         st.success("API key confirmed!")
         st.balloons()
 
+    video = st.file_uploader("Video", type=["mp4", "avi","mkv","mov",])
+    selected_chunk_len = st.selectbox("Select Chunk Size (min)",[3,5,10], index=1)
+    chunks_folder = "/tmp/chunks"
+    destination = "/tmp/transcripts/final_transcript.txt"
+    has_transcript = os.path.exists(destination)
+    os.makedirs(chunks_folder, exist_ok=True)
+    os.makedirs(os.path.dirname(destination), exist_ok=True)
+
 llm = ChatOpenAI(
     openai_api_key=openai_api_key,
     temperature=0.1,
 )
 
 
-has_transcript = os.path.exists("./files/transcripts/final_transcript.txt")
 
 splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(chunk_size=800, chunk_overlap=100,)
+
 
 @st.cache_resource()
 def embed_file (file_path):
@@ -110,16 +118,12 @@ st.markdown("""
 
 """)
 
-with st.sidebar:
-    video = st.file_uploader("Video", type=["mp4", "avi","mkv","mov",])
-    selected_chunk_len = st.selectbox("Select Chunk Size (min)",[3,5,10], index=1)
-    chunks_folder = "/tmp/chunks"
-    destination = "/tmp/transcripts/final_transcript.txt"
+
 
 if video:
     with st.status("Uplading Video now...") as status:
         video_content = video.read()
-        video_path = f"./.cache/mp3/{video.name}"
+        video_path = f"/tmp/{video.name}"
         with open(video_path, "wb") as f:
             f.write(video_content)
         status.update(label="Extract audio segment now...")
