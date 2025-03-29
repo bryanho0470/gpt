@@ -149,7 +149,7 @@ with transcript_tab:
         with open(destination) as file:
             st.write(file.read())
     else:
-        st.warning
+        st.warning("Transcript not found. Please upload a video file first.", icon="⚠️")
 
 with summary_tab:
     start = st.button("Generate Summary")
