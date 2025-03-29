@@ -155,7 +155,7 @@ with summary_tab:
                 st.error(f"Error loading file: {e}")
                 st.stop()
         else:
-            st.warning("Transcript file is empty or does not exist.")
+            st.warning("Transcript file is empty or does not exist." icon="⚠️")
             st.stop()
         
         
