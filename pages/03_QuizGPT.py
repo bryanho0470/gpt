@@ -65,6 +65,7 @@ with st.sidebar:
         else:
             st.stop()
     else:
+        openai_api_key = st.session_state["api_key"]
         st.success("API key confirmed!")
         st.balloons()
         
