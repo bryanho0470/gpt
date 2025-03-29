@@ -1,3 +1,4 @@
+import openai
 import streamlit as st
 import re
 import json
@@ -33,23 +34,31 @@ st.title("QuizGPT")
 with st.sidebar:
     selected_model = st.selectbox("Select Model", ["phi4:latest","mistral:latest","llama2:latest","qwen:latest",])
 
-llm = ChatOllama(
-    model=selected_model,
-    temperature=0.1,
-    streaming=True,
-    callbacks=[
-        StreamingStdOutCallbackHandler()
-    ],
-    )
-
-# llm = ChatOpenAI(
+# llm = ChatOllama(
+#     model=selected_model,
 #     temperature=0.1,
-#     model="gpt-3.5-turbo-0125",
 #     streaming=True,
 #     callbacks=[
 #         StreamingStdOutCallbackHandler()
 #     ],
-# )
+#     )
+
+with st.markdown:
+    st.subheader("API setting")
+    openai_api_key = st.text_input("Enter your OpenAI API KEY!")
+    if not openai_api_key:
+        st.warning("Please enter your OpenAI API key to continue.")
+        st.stop()
+
+llm = ChatOpenAI(
+    temperature=0.1,
+    model="gpt-3.5-turbo-0125",
+    openai_api_key=openai_api_key,
+    streaming=True,
+    callbacks=[
+        StreamingStdOutCallbackHandler()
+    ],
+)
 
 def format_docs(docs):
     """Format retrieved documents."""
