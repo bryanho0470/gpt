@@ -63,9 +63,16 @@ splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(chunk_size=800, 
 
 @st.cache_resource()
 def embed_file (file_path):
-    loader = TextLoader(file_path)
-    docs = loader.load_and_split(text_splitter=splitter)
-    embeddings = OpenAIEmbeddings()
+    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        st.error("File not found or empty.")
+        st.stop()
+    try:
+        loader = TextLoader(file_path)
+        docs = loader.load_and_split(text_splitter=splitter)
+    except Exception as e:
+        st.error(f"Error loading file: {e}")
+        st.stop()
+    embeddings = OpenAIEmbeddings(openai_api_key=st.session_state["api_key"])
     vectorstore = FAISS.from_documents(docs, embeddings) 
     retriever = vectorstore.as_retriever()
     return retriever
