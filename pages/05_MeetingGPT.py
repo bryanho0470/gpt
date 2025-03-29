@@ -43,13 +43,13 @@ with st.sidebar:
         st.success("API key confirmed!")
         st.balloons()
 
-    video = st.file_uploader("Video", type=["mp4", "avi","mkv","mov",])
-    selected_chunk_len = st.selectbox("Select Chunk Size (min)",[3,5,10], index=1)
-    chunks_folder = "/tmp/chunks"
-    destination = "/tmp/transcripts/final_transcript.txt"
-    has_transcript = os.path.exists(destination)
-    os.makedirs(chunks_folder, exist_ok=True)
-    os.makedirs(os.path.dirname(destination), exist_ok=True)
+        video = st.file_uploader("Video", type=["mp4", "avi","mkv","mov",])
+        selected_chunk_len = st.selectbox("Select Chunk Size (min)",[3,5,10], index=1)
+        chunks_folder = "/tmp/chunks"
+        destination = "/tmp/transcripts/final_transcript.txt"
+        has_transcript = os.path.exists(destination)
+        os.makedirs(chunks_folder, exist_ok=True)
+        os.makedirs(os.path.dirname(destination), exist_ok=True)
 
 llm = ChatOpenAI(
     openai_api_key=openai_api_key,
