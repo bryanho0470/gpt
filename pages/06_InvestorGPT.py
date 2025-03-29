@@ -12,7 +12,7 @@ from sympy import true
 
 llm = ChatOpenAI(
     temperature=0.1,
-    streaming=true,
+    streaming=True,
 )
 
 alpha_vantage_api_key = os.environ.get("ALPHA_VANTAGE_API_KEY")

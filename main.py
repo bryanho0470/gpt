@@ -11,13 +11,13 @@ st.markdown(
     """
     # Hello
 
-    Welcome to my FullstackGPT portfolio!
+    Welcome to my FullstackGPT portfolio!x
 
     Here are the apps i made
 
     - [X] [DocumentGPT](/DocumentGPT)
     - [X] [PrivateGPT](/PrivateGPT)
-    - [ ] [QuizGPT](/QuizGPT)
+    - [X] [QuizGPT](/QuizGPT)
     - [ ] [SiteGPT](/SiteGPT)
     - [ ] [MeetingGPT](/MeetingGPT)
     - [ ] [InvestorGPT](/InvenstorGPT)

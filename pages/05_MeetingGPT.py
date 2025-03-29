@@ -11,7 +11,6 @@ from langchain.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
 from langchain.schema import StrOutputParser
 from langchain.vectorstores.faiss import FAISS
-from langchain.storage import LocalFileStore
 from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
 
 llm = ChatOpenAI(
@@ -23,16 +22,12 @@ has_transcript = os.path.exists("./files/transcripts/final_transcript.txt")
 
 splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(chunk_size=800, chunk_overlap=100,)
 
-@st.cache_data()
+@st.cache_resource()
 def embed_file (file_path):
-    cache_dir = LocalFileStore("./.cache/embeddings")
     loader = TextLoader(file_path)
     docs = loader.load_and_split(text_splitter=splitter)
     embeddings = OpenAIEmbeddings()
-    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(
-        embeddings, cache_dir
-    )
-    vectorstore = FAISS.from_documents(docs, cached_embeddings) # we need to find another vectorstore service for further implementation. Chroma and FAISS is free vectorstore
+    vectorstore = FAISS.from_documents(docs, embeddings) 
     retriever = vectorstore.as_retriever()
     return retriever
 
@@ -119,8 +114,6 @@ with summary_tab:
     if start:
         loader = TextLoader(destination)
         docs = loader.load_and_split(text_splitter=splitter)
-        st.write(docs)
-
         first_summary_prompt = ChatPromptTemplate.from_template(
         """
         Write a concise summary of the following:

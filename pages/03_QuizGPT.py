@@ -1,4 +1,5 @@
 import streamlit as st
+import re
 import json
 from langchain.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import CharacterTextSplitter
@@ -10,8 +11,15 @@ from langchain.schema import BaseOutputParser
         
 class JsonOutputParser(BaseOutputParser):
     def parse(self, text):
-        text = text.replace("```","").replace("json","")
-        return json.loads(text)
+        text = text.replace("```","").replace("json","").strip()
+        text = re.sub(r'\\(?![\"\\/bfnrtu])', r'\\\\', text)
+    
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as e:
+            st.error(f"X JSON parsing error: {e}")
+            st.code(text, language="json")
+            raise e
 
 output_parser = JsonOutputParser()
 
@@ -23,7 +31,6 @@ st.set_page_config(
 st.title("QuizGPT")
 
 with st.sidebar:
-    file = st.file_uploader("Upload a .txt .pdf or .docx file", type=["pdf","txt","docx"],)
     selected_model = st.selectbox("Select Model", ["phi4:latest","mistral:latest","llama2:latest","qwen:latest",])
 
 llm = ChatOllama(
@@ -51,6 +58,7 @@ def format_docs(docs):
 questions_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", """ You are a helpful assistant that is role playing as a teacher. Based ONLY on the following context make 10 questions to test the user's knowledge about athe text.
+            And question must be simple.
             Each question should have 4 answers, three of them must be incorrect and one must be correct.
             Use (o) to signal the correct answer.
             
@@ -82,10 +90,11 @@ formatting_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", """
         You are a powerfil formatting algorithm.
+        You must return only valid JSON. Do not write anything before or after it
         
         You format exam questions into JSON format.
         Answers with (o) are the correct ones.
-
+        
         Example Imput:
 
         Question: What is the color of the ocean?
