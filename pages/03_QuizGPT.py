@@ -46,7 +46,7 @@ st.title("QuizGPT")
 
 with st.sidebar:
     st.subheader("API setting")
-    openai_api_key = st.text_input("Enter your OpenAI API KEY!")
+    openai_api_key = st.text_input("Enter your OpenAI API KEY!", type="password")
     if not openai_api_key:
         st.warning("Please enter your OpenAI API key to continue.")
         st.stop()
