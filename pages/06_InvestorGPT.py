@@ -17,7 +17,6 @@ st.set_page_config(
 st.title("InvestorGPT")
 
 st.markdown("""
-    # Investor GPT
     
     Welcome to InvestorGPT
             

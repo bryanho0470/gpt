@@ -16,12 +16,12 @@ st.set_page_config(
 )
 
 st.title("Research Assistance")
+
 st.markdown("""
-    # Investor GPT
-    
-    Welcome to InvestorGPT
+       
+    Welcome to Assistance
             
-    Write down the name of a company and our Agent will do the research for you.
+    Write down the key words what you want..
 
     """
 )
