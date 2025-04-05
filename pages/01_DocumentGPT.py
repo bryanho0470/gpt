@@ -12,6 +12,10 @@ from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.memory import ConversationSummaryBufferMemory
 
+st.set_page_config(
+    page_title="DocumentGPT",
+    page_icon="💬"
+)
 
 # if "messages" not in st.session_state:
 #     st.session_state["messages"] = []
@@ -37,10 +41,6 @@ class ChatCallbackHandler(BaseCallbackHandler):
         self.message_box.markdown(self.message)
 
 
-st.set_page_config(
-    page_title="DocumentGPT",
-    page_icon="💬"
-)
 
 with st.sidebar:
     st.subheader("API setting")

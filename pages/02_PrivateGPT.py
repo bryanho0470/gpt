@@ -12,6 +12,10 @@ from langchain.chat_models import ChatOllama
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.memory import ConversationSummaryBufferMemory
 
+st.set_page_config(
+    page_title="Private models DocumentGPT",
+    page_icon="🕵️‍♀️",
+)
 
 # if "messages" not in st.session_state:
 #     st.session_state["messages"] = []
@@ -99,10 +103,6 @@ def invoke_chain(message):
     save_memory(message, result.content)
 
 
-st.set_page_config(
-    page_title="Private models DocumentGPT",
-    page_icon="🕵️‍♀️",
-)
 
 st.title("PrivateGPT Document Chatbot")
 

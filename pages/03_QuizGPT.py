@@ -11,6 +11,11 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.callbacks import StreamingStdOutCallbackHandler
 from langchain.schema import BaseOutputParser
         
+st.set_page_config(
+    page_title="QuizGPT",
+    page_icon="❓"
+)
+
 class JsonOutputParser(BaseOutputParser):
     def parse(self, text):
         text = text.replace("```","").replace("json","").strip()
@@ -25,10 +30,6 @@ class JsonOutputParser(BaseOutputParser):
 
 output_parser = JsonOutputParser()
 
-st.set_page_config(
-    page_title="QuizGPT",
-    page_icon="❓"
-)
 
 st.title("QuizGPT")
 
