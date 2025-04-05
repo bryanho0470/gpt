@@ -103,9 +103,6 @@ def invoke_chain(message):
     save_memory(message, result.content)
 
 
-
-st.title("PrivateGPT Document Chatbot")
-
 st.markdown(
     """
     Welcome!
