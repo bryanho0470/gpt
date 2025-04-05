@@ -1,12 +1,12 @@
 import streamlit as st
-import os
 import requests
 from typing import Type
+from bs4 import BeautifulSoup
 from langchain.chat_models import ChatOpenAI
 from langchain.agents import initialize_agent, AgentType
 from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
-from langchain.utilities import DuckDuckGoSearchAPIWrapper
+from langchain.utilities import DuckDuckGoSearchAPIWrapper, WikipediaAPIWrapper
 from langchain.schema import SystemMessage
 
 
@@ -17,11 +17,12 @@ st.set_page_config(
 
 st.title("Research Assistance")
 
-st.markdown("""
+st.markdown(
+    """
        
     Welcome to Assistance
             
-    Write down the key words what you want..
+    Write down the key words what you want to know.
 
     """
 )
@@ -57,86 +58,81 @@ llm = ChatOpenAI(
     openai_api_key=openai_api_key,
 )
 
-class StockMarketSymbolSearchToolArgsSchema(BaseModel):
-    query : str = Field(
-        description="The Query you will search for. Example quesry: Stock Market Symbol for Apple Company"
-    )
+# === Tool 1: Wikipedia Search ===
+class WikiSearchArgs(BaseModel):
+    query: str = Field(description="Search term for Wikipedia")
 
-class StockMarketSymbolSearchTool(BaseTool):
-    name : str ="StockMarketSymbolSearchTool"
-    description : str = """
-    Use this toll to find the stock market symbol for a company.
-    It takes a query as an argument.
-    """
-    args_schema : Type[StockMarketSymbolSearchToolArgsSchema] = StockMarketSymbolSearchToolArgsSchema
+class WikipediaSearchTool(BaseTool):
+    name = "WikipediaSearch"
+    description = "Search Wikipedia and return relevant summary."
+    args_schema: Type[WikiSearchArgs] = WikiSearchArgs
 
-    def _run(self, query):
+    def _run(self, query: str):
+        wiki = WikipediaAPIWrapper()
+        return wiki.run(query)
+
+# === Tool 2: DuckDuckGo Search ===
+class DuckSearchArgs(BaseModel):
+    query: str = Field(description="Search query for DuckDuckGo")
+
+class DuckDuckGoSearchTool(BaseTool):
+    name = "DuckDuckGoSearch"
+    description = "Search DuckDuckGo and return URLs or snippets."
+    args_schema: Type[DuckSearchArgs] = DuckSearchArgs
+
+    def _run(self, query: str):
         ddg = DuckDuckGoSearchAPIWrapper()
         return ddg.run(query)
 
+# === Tool 3: Website Scraper ===
+class ScrapeWebsiteArgs(BaseModel):
+    url: str = Field(description="A full URL of the website to scrape")
 
-class CompanyOverviewArgsSchema(BaseModel):
-    symbol : str = Field(description="Stock symbol of the company. Examples: AAPL, TSLA",)
+class WebsiteScraperTool(BaseTool):
+    name = "WebsiteScraper"
+    description = "Extract visible text from a given webpage URL"
+    args_schema: Type[ScrapeWebsiteArgs] = ScrapeWebsiteArgs
 
-class CompanFinancialOverviewTool(BaseTool):
-    name: str="CompanyOverview"
-    description : str = """
-    Use this to get an overview of the financials of the company.
-    You should enter a stock symbol.
-    """
-    args_schema : Type[CompanyOverviewArgsSchema] = CompanyOverviewArgsSchema
+    def _run(self, url: str):
+        try:
+            response = requests.get(url, timeout=10)
+            soup = BeautifulSoup(response.text, "html.parser")
+            text = soup.get_text()
+            return text[:5000]  # limit text to prevent token overflow
+        except Exception as e:
+            return f"Error scraping {url}: {e}"
 
-    def _run(self, symbol):
-        r = requests.get(f"https://www.alphavantage.co/query?function=Overview&symbol={symbol}&apikey={alpha_vantage_api_key}")
-        return r.json()
+# === Tool 4: Save to File ===
+class SaveFileArgs(BaseModel):
+    content: str = Field(description="Text content to save")
 
-class CompanyIncomeStatementTool(BaseTool):
-    name : str = "CompanyIncomeStatement"
-    description : str = """
-    Use this to get the income statement of a company.
-    You should enter a stock symbol.
-    """
-    args_schema: Type[CompanyOverviewArgsSchema] = CompanyOverviewArgsSchema
+class SaveResearchTool(BaseTool):
+    name = "SaveResearch"
+    description = "Save research content to a .txt file"
+    args_schema: Type[SaveFileArgs] = SaveFileArgs
 
-    def _run(self, symbol):
-        r = requests.get (f"https://www.alphavantage.co/query?function=INCOME_STATEMENT&symbol={symbol}&apikey={alpha_vantage_api_key}")
-        return r.json()["annualReports"]
-
-class CompanyStockPerformanceTool(BaseTool):
-    name : str = "CompanyStockPerformance"
-    description : str = """
-    Use this to get the Company stock persformance.
-    You should enter a stock symbol
-    """
-    args_schema : Type[CompanyOverviewArgsSchema] = CompanyOverviewArgsSchema
-
-    def _run(self, symbol):
-        r = requests.get(f"https://www.alphavantage.co/query?function=Time_SERIES_MONTHLY_Adjusted&symbol={symbol}&apikey={alpha_vantage_api_key}")
-
-        return r.json()["Monthly Adjusted Time Series"]
-
-
-
+    def _run(self, content: str):
+        path = "xz_backdoor_research.txt"
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return f"Research saved to {path}"
+    
 agent = initialize_agent(
     llm=llm,
     verbose=True,
     agent=AgentType.OPENAI_FUNCTIONS,
     handle_parsing_errors=True,
     tools=[
-        StockMarketSymbolSearchTool(),
-        CompanFinancialOverviewTool(),
-        CompanyIncomeStatementTool(),
-        CompanyStockPerformanceTool(),
+        WikipediaSearchTool(),
+        DuckDuckGoSearchTool(),
+        WebsiteScraperTool(),
+        SaveResearchTool()
     ],
     agent_kwargs = {
-        "system_message": SystemMessage(content="""
-        you are a hedge fund manager.
-        You evaluate a company and provide your opinion and reasons why the stock is a buy or not.
-                                        
-        Consider the performance of a stock, the company overview and the income statement.
-                                        
-        Be assertive in your judgement and recommend the stock or advice the user against it.
-        
+        "system_message": SystemMessage(content=
+        """
+        You are very brilliant research assistant. You can search for information on Wikipedia, DuckDuckGo, and scrape websites.
+        You can also save the information you find to a .txt file.
         """
         )
     }
