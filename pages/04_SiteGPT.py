@@ -12,6 +12,19 @@ st.set_page_config(
     page_icon="📺"
 )
 
+st.title("SiteGPT")
+
+st.markdown(
+    """
+    
+    #Site GPT
+    
+    Ask questions about the content of a website.
+
+    Start by writing the URL of the website on the sidebar.
+
+    """
+)
 with st.sidebar:
     st.subheader("API setting")
 
@@ -158,18 +171,6 @@ def load_website(url):
 
 
 
-st.title("SiteGPT")
-
-st.markdown(
-    """
-    
-    #Site GPT
-    
-    Ask questions about the content of a website.
-
-    Start by writing the URL of the website on the sidebar.
-
-    """)
 
 with st.sidebar:
         url = st.text_input(

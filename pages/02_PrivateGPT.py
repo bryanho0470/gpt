@@ -17,6 +17,15 @@ st.set_page_config(
     page_icon="🕵️‍♀️",
 )
 
+st.title("Private GPT")
+
+st.markdown(
+    """
+    Welcome!
+    Use this chatbot to ask questions to an AI about your files!
+    """
+    )
+
 # if "messages" not in st.session_state:
 #     st.session_state["messages"] = []
 #     # st.session_state.messages = []
@@ -103,12 +112,6 @@ def invoke_chain(message):
     save_memory(message, result.content)
 
 
-st.markdown(
-    """
-    Welcome!
-    Use this chatbot to ask questions to an AI about your files!
-    """
-    )
 
 with st.sidebar:
     st.subheader("API setting")

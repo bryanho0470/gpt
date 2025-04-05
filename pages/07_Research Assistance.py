@@ -15,6 +15,17 @@ st.set_page_config(
     page_icon="🤖"
 )
 
+st.title("Research Assistance")
+st.markdown("""
+    # Investor GPT
+    
+    Welcome to InvestorGPT
+            
+    Write down the name of a company and our Agent will do the research for you.
+
+    """
+)
+
 with st.sidebar:
     st.subheader("API setting")
 
@@ -132,14 +143,6 @@ agent = initialize_agent(
 )
 
 
-st.markdown("""
-    # Investor GPT
-    
-    Welcome to InvestorGPT
-            
-    Write down the name of a company and our Agent will do the research for you.
-
-    """)
 
 company = st.text_input("Write the name of the company you are interested on.")
 

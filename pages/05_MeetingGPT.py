@@ -18,6 +18,12 @@ st.set_page_config(
     page_icon="📅"
 )
 
+st.title("MeetingGPT")
+st.markdown("""
+    Welcome to Meeting GPT. Please upload your recoreded meeting Video.
+    Then, we will provide a transcript and summarized minutes.
+
+""")
 with st.sidebar:
     st.subheader("API setting")
 
@@ -118,12 +124,6 @@ def transcribe_chunks(chunk_folder, destination):
 
 st.markdown(f"already has transcript? =  {has_transcript}")
 
-st.title("MeetingGPT")
-st.markdown("""
-    Welcome to Meeting GPT. Please upload your recoreded meeting Video.
-    Then, we will provide a transcript and summarized minutes.
-
-""")
 
 
 
